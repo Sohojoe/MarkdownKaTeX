@@ -1,11 +1,15 @@
 ﻿@page "/"
 @inject IJSRuntime JSRuntime;
+@* @inject MdKaTeXService MdKaTeXService; *@
 
 <div @ref="divElement">
 </div>
 
 @code {
     private ElementReference divElement;
+
+    private MdKaTeXService mdService= new MdKaTeXService();
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -22,6 +26,12 @@ where $d^\pi(s)$ is the stationary distribution of Markov chain for $\pi_\theta$
 ");
             await JSRuntime.InvokeVoidAsync("markdownHelper.render", markup.ToString(), divElement);
             StateHasChanged();
+
+            var url = "https://raw.githubusercontent.com/Sohojoe/AccessibleRL/master/_tests/test001.md";
+            string md = await mdService.FileToMarkdownAsync(url);
+            await JSRuntime.InvokeVoidAsync("markdownHelper.render", md, divElement);
+            StateHasChanged();
+
 
         }
     }    
