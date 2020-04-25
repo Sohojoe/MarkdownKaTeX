@@ -1,7 +1,28 @@
 ﻿@page "/"
+@inject IJSRuntime JSRuntime;
 
-<h1>Hello, world!</h1>
+<div @ref="divElement">
+</div>
 
-Welcome to your new app.
+@code {
+    private ElementReference divElement;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var markup = new MarkupString(@"
+$$
+J(\theta) 
+= \sum_{s \in \mathcal{S}} d^\pi(s) V^\pi(s) 
+= \sum_{s \in \mathcal{S}} d^\pi(s) \sum_{a \in \mathcal{A}} \pi_\theta(a \vert s) Q^\pi(s, a)
+$$
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+where $d^\pi(s)$ is the stationary distribution of Markov chain for $\pi_\theta$ (on-policy state distribution under $\pi$). For simplicity, the parameter $\theta$ would be omitted for the policy $\pi_\theta$ when the policy is present in the subscript of other functions; for example, $d^{\pi}$ and $Q^\pi$ should be $d^{\pi_\theta}$ and $Q^{\pi_\theta}$ if written in full.
+
+");
+            await JSRuntime.InvokeVoidAsync("markdownHelper.render", markup.ToString(), divElement);
+            StateHasChanged();
+
+        }
+    }    
+}
