@@ -1,38 +1,43 @@
 ﻿@page "/"
 @inject IJSRuntime JSRuntime;
-@* @inject MdKaTeXService MdKaTeXService; *@
+@inject MdKaTeXService mdKaTeXService;
 
-<div @ref="divElement">
+<div @ref="divHome">
+    @Message
+</div>
+<div @ref="divRecentPosts">
 </div>
 
 @code {
-    private ElementReference divElement;
-
-    private MdKaTeXService mdService= new MdKaTeXService();
-
+    @* private MdKaTeXService mdKaTeXService = new MdKaTeXService(); *@
+    private ElementReference divHome;
+    private ElementReference divRecentPosts;
+    private string Message;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+
         if (firstRender)
         {
-            var markup = new MarkupString(@"
-$$
-J(\theta) 
-= \sum_{s \in \mathcal{S}} d^\pi(s) V^\pi(s) 
-= \sum_{s \in \mathcal{S}} d^\pi(s) \sum_{a \in \mathcal{A}} \pi_\theta(a \vert s) Q^\pi(s, a)
-$$
-
-where $d^\pi(s)$ is the stationary distribution of Markov chain for $\pi_\theta$ (on-policy state distribution under $\pi$). For simplicity, the parameter $\theta$ would be omitted for the policy $\pi_\theta$ when the policy is present in the subscript of other functions; for example, $d^{\pi}$ and $Q^\pi$ should be $d^{\pi_\theta}$ and $Q^{\pi_\theta}$ if written in full.
-
-");
-            await JSRuntime.InvokeVoidAsync("markdownHelper.render", markup.ToString(), divElement);
+            Message = "loading...";
             StateHasChanged();
-
-            var url = "https://raw.githubusercontent.com/Sohojoe/AccessibleRL/master/_tests/test001.md";
-            string md = await mdService.FileToMarkdownAsync(url);
-            await JSRuntime.InvokeVoidAsync("markdownHelper.render", md, divElement);
+            var home = await mdKaTeXService.GetPageAsync("home.md");
+            if (string.IsNullOrWhiteSpace(home))
+                home = $"Add home.md to create your home page";
+            MarkupString md = new MarkupString(home);
+            await JSRuntime.InvokeVoidAsync("markdownHelper.render", md.Value, divHome);
             StateHasChanged();
-
-
+            var githubPosts = await mdKaTeXService.GetPostsAsync();
+            var orderedPosts = githubPosts?.OrderByDescending(x=>x.Name).ToList();
+            var recentPosts = new System.Text.StringBuilder()
+                .AppendLine("### Recent Posts")
+                .AppendLine("");
+            foreach (var post in orderedPosts.Take(5))
+            {
+                recentPosts.AppendLine($"* **{post.Name}** [Read]({post.NavUrl})");
+            }
+            md = new MarkupString(recentPosts.ToString());
+            await JSRuntime.InvokeVoidAsync("markdownHelper.render", md.Value, divRecentPosts);
+            StateHasChanged();
         }
     }    
 }

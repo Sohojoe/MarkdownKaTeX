@@ -1,0 +1,50 @@
+@page "/{gitUser}/{reproName}/{directory}/{filename}"
+@inject IJSRuntime JSRuntime;
+@inject MdKaTeXService MdKaTeXService;
+
+<div @ref="divElement">
+    @Message
+</div>
+
+@code {
+    [Parameter]
+    public string GitUser { get; set; }
+    [Parameter]
+    public string ReproName { get; set; }
+    [Parameter]
+    public string Directory { get; set; }
+    [Parameter]
+    public string Filename { get; set; }
+
+    private ElementReference divElement;
+    private string Message;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Message = string.Empty;
+            if (string.IsNullOrWhiteSpace(GitUser) || string.IsNullOrWhiteSpace(ReproName) ||
+                string.IsNullOrWhiteSpace(Directory) || string.IsNullOrWhiteSpace(Filename))
+            {
+                Message = $"Invalid url GitUser:{GitUser} ReproName:{ReproName} Directory:{Directory} Filename:{Filename} ";
+                StateHasChanged();
+                return;
+            }
+            string url = string.Empty;
+            try
+            {
+                url = $"https://raw.githubusercontent.com/{GitUser}/{ReproName}/master/{Directory}/{Filename}";
+                string md = await MdKaTeXService.FileToMarkdownAsync(url);
+                await JSRuntime.InvokeVoidAsync("markdownHelper.render", md, divElement);
+                StateHasChanged();
+            }
+            catch (System.Exception ex)
+            {
+                Message = $"Failed to load story: {url}. Error: {ex.Message}";
+                StateHasChanged();
+                throw ex;
+            }
+        }
+    }    
+}

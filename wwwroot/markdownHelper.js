@@ -1,8 +1,10 @@
 window.markdownHelper = {
-    render: function (mdStr, divId) {
+    // delimiters 'dollars', 'brackets',, 'gitlab', 'julia' 'kramdown', 'pandoc'
+    render: function (mdStr, divId, delimiters = 'dollars') {
         const tm = texmath.use(katex);
         const md = markdownit().use(tm, { engine: katex,
-                                        delimiters:'dollars',
+                                        delimiters: delimiters,
+                                        // delimiters:'kramdown',
                                         macros:{"\\RR": "\\mathbb{R}"}
                                         });
         divId.innerHTML = 
