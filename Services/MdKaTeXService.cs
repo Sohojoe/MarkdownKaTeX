@@ -14,9 +14,6 @@ namespace MarkdownKaTeX
 {
     public class MdKaTeXService
     {
-        string appName = "MarkdownKaTeX";
-        string clientID = "d18caf90d72937793d29";
-        string clientSecret = "7a0bd7b2fd793ee41c445d40347c1700b5b3c129";
         HttpClient _http;
         public HttpClient Http {get {
             if (_http==null)
@@ -32,18 +29,27 @@ namespace MarkdownKaTeX
         GitHubClient _gitHubClient {get {
             if (__gitHubClient==null)
             {
-               __gitHubClient = new Octokit.GitHubClient(new Octokit.ProductHeaderValue(appName));
-               var basicAuth = new Credentials(clientID, clientSecret);
+               __gitHubClient = new Octokit.GitHubClient(new Octokit.ProductHeaderValue(_githubToken.AppName));
+               var basicAuth = new Credentials(_githubToken.ClientID, _githubToken.ClientSecret);
                 __gitHubClient.Credentials = basicAuth;
             }
             return __gitHubClient;
         }}
-        public string GitUser {get;set;} = "sohojoe";
-        public string ReproName {get;set;} = "AccessibleRL";
+        public string GitUser {get;set;}
+        public string ReproName {get;set;}
         // public string GitUrl {get;set;} = "https://github.com/lilianweng/lil-log/";
         public string GitUrl { get {
             return $"https://github.com/{GitUser}/{ReproName}/";
         }}
+
+        GithubToken _githubToken;
+
+        public MdKaTeXService(GithubToken githubToken)
+        {
+            _githubToken = githubToken;
+            GitUser = githubToken.GitUser;
+            ReproName = githubToken.DefaultReproName;
+        }
         async Task<string> DownloadTextFileAsync(string path)
         {
             try
